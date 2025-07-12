@@ -1,0 +1,234 @@
+├── build.gradle
+├── settings.gradle
+├── gradle
+│   └── wrapper
+│       ├── gradle-wrapper.jar
+│       ├── gradle-wrapper.properties
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── com
+│   │   │       └── example
+│   │   │           └── api
+│   │   │               ├── models
+│   │   │               │   └── User.java
+│   │   │               └── utils
+│   │   │                   └── PlaywrightClient.java
+│   │   └── resources
+│   │       └── config.properties
+│   └── test
+│       ├── java
+│       │   └── com
+│       │       └── example
+│       │           └── api
+│       │               ├── runner
+│       │               │   └── TestRunner.java
+│       │               └── stepdefinitions
+│       │                   └── ApiSteps.java
+│       └── resources
+│           └── features
+│               └── api_tests.feature
+
+
+build.gradle ======================
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'com.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    implementation 'com.microsoft.playwright:playwright:1.48.0'
+    implementation 'io.cucumber:cucumber-java:8.24.0'
+    implementation 'io.cucumber:cucumber-junit:8.24.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+application {
+    mainClass = 'com.example.api.Main'
+}
+
+wrapper {
+    gradleVersion = '8.9'
+}
+
+settings.gradle =====================
+rootProject.name = 'playwright-cucumber-api'
+
+src/main/java/com/example/api/models/User.java ==================
+
+package com.example.api.models;
+
+public class User {
+    private String name;
+    private String job;
+
+    public User(String name, String job) {
+        this.name = name;
+        this.job = job;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getJob() {
+        return job;
+    }
+
+    public void setJob(String job) {
+        this.job = job;
+    }
+}
+
+src/main/java/com/example/api/utils/PlaywrightClient.java ======================
+package com.example.api.utils;
+
+import com.microsoft.playwright.APIRequest;
+import com.microsoft.playwright.APIRequestContext;
+import com.microsoft.playwright.APIResponse;
+import com.microsoft.playwright.Playwright;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.util.Properties;
+
+public class PlaywrightClient {
+    private final Playwright playwright;
+    private final APIRequestContext requestContext;
+    private final ObjectMapper objectMapper;
+    private final String baseUrl;
+
+    public PlaywrightClient() {
+        this.playwright = Playwright.create();
+        this.objectMapper = new ObjectMapper();
+        
+        Properties props = new Properties();
+        try {
+            props.load(getClass().getClassLoader().getResourceAsStream("config.properties"));
+            this.baseUrl = props.getProperty("api.base.url");
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load config.properties", e);
+        }
+        
+        this.requestContext = playwright.request().newContext(new APIRequest.NewContextOptions()
+            .setBaseURL(baseUrl));
+    }
+
+    public APIResponse createUser(Object payload) throws Exception {
+        String jsonPayload = objectMapper.writeValueAsString(payload);
+        return requestContext.post("/users",
+            APIRequestContext.RequestOptions.create()
+                .setHeader("Content-Type", "application/json")
+                .setData(jsonPayload));
+    }
+
+    public void dispose() {
+        requestContext.dispose();
+        playwright.close();
+    }
+}
+
+src/main/resources/config.properties ======================
+api.base.url=https://reqres.in/api
+src/test/java/com/example/api/runner/TestRunner.java ====================
+
+package com.example.api.runner;
+
+import io.cucumber.junit.Cucumber;
+import io.cucumber.junit.CucumberOptions;
+import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(
+    features = "src/test/resources/features",
+    glue = "com.example.api.stepdefinitions",
+    plugin = {"pretty", "html:build/reports/cucumber.html"}
+)
+public class TestRunner {
+    @Test
+    void runCucumberTests() {
+        // This method is intentionally empty as Cucumber handles test execution
+    }
+}
+
+src/test/java/com/example/api/stepdefinitions/ApiSteps.java ================
+
+package com.example.api.stepdefinitions;
+
+import com.example.api.models.User;
+import com.example.api.utils.PlaywrightClient;
+import com.microsoft.playwright.APIResponse;
+import io.cucumber.java.After;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import org.junit.jupiter.api.Assertions;
+
+public class ApiSteps {
+    private PlaywrightClient client;
+    private APIResponse response;
+
+    @Given("I have a Playwright API client")
+    public void i_have_a_playwright_api_client() {
+        client = new PlaywrightClient();
+    }
+
+    @When("I send a POST request to create a user with name {string} and job {string}")
+    public void i_send_a_post_request_to_create_user(String name, String job) throws Exception {
+        User user = new User(name, job);
+        response = client.createUser(user);
+    }
+
+    @Then("the response status should be {int}")
+    public void the_response_status_should_be(int expectedStatus) {
+        Assertions.assertEquals(expectedStatus, response.status());
+    }
+
+    @Then("the response should contain the name {string}")
+    public void the_response_should_contain_name(String expectedName) {
+        String responseBody = response.text();
+        Assertions.assertTrue(responseBody.contains(expectedName));
+    }
+
+    @After
+    public void cleanup() {
+        if (client != null) {
+            client.dispose();
+        }
+    }
+}
+
+src/test/resources/features/api_tests.feature ================
+Feature: API Testing with Playwright and Cucumber
+
+  Scenario: Create a new user via POST request
+    Given I have a Playwright API client
+    When I send a POST request to create a user with name "John Doe" and job "Developer"
+    Then the response status should be 201
+    And the response should contain the name "John Doe"
