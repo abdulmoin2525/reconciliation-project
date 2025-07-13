@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cucumber>
+    <!-- Define features directory -->
+    <features-directory>src/test/resources/features</features-directory>
+    
+    <!-- Define step definitions package -->
+    <glue>com.example.api.stepdefinitions</glue>
+    
+    <!-- Define plugins for reporting -->
+    <plugin>
+        <name>pretty</name>
+    </plugin>
+    <plugin>
+        <name>html</name>
+        <output>build/reports/cucumber.html</output>
+    </plugin>
+    <plugin>
+        <name>junit</name>
+        <output>build/reports/cucumber-junit.xml</output>
+    </plugin>
+    
+    <!-- Define tags to include -->
+    <filter>
+        <tags>@api</tags>
+    </filter>
+    
+    <!-- Enable monochrome output for better console readability -->
+    <monochrome>false</monochrome>
+    
+    <!-- Generate step definition snippets in camelCase -->
+    <snippets>CAMELCASE</snippets>
+</cucumber>
