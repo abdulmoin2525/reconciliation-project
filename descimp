@@ -1,0 +1,73 @@
+🔐 How IMPACT Application Works with SSO
+1. SSO Integration Overview
+Single Sign-On (SSO) allows users to log in once and gain access to multiple applications without needing to re-enter credentials. For the IMPACT application, SSO integration is typically done using identity providers (IdPs) like:
+
+Azure Active Directory (Azure AD)
+
+Okta
+
+Ping Identity
+
+ADFS (Active Directory Federation Services)
+
+2. Authentication Flow with SSO
+Here’s a typical SSO authentication flow:
+
+User tries to access the IMPACT application.
+
+IMPACT redirects the user to the Identity Provider (IdP) for authentication.
+
+User logs in using corporate credentials (e.g., company email and password).
+
+IdP validates credentials and sends back a token (SAML or OIDC-based) to IMPACT.
+
+IMPACT uses this token to authenticate the user and allows access to the application.
+
+🔐 Role of Security Groups in SSO Configuration
+Security groups are essential for access control and are often attached/configured in the IdP to manage which users can access the IMPACT application and what level of access they get.
+
+1. Group-Based Access Control
+Users in your organization are assigned to security groups like:
+
+IMPACT_Users
+
+IMPACT_Admins
+
+IMPACT_ReadOnly
+
+These groups are managed in the IdP (e.g., Azure AD).
+
+2. Mapping Groups to Roles
+During the SSO login process, the user's group membership is passed to the IMPACT application in the authentication token.
+
+IMPACT uses this information to map users to application roles:
+
+Admins can create/modify users.
+
+Users may only have view/edit permissions.
+
+ReadOnly group may have restricted access.
+
+3. Provisioning & Authorization
+The business or IT team manages group membership.
+
+Only users added to the approved security groups can access the IMPACT application via SSO.
+
+This improves security, auditability, and simplifies user onboarding/offboarding.
+
+✅ Example Setup (Using Azure AD)
+Component	Description
+IdP	Azure Active Directory
+SSO Protocol	SAML 2.0 or OIDC
+Security Groups	IMPACT_Admin, IMPACT_User, IMPACT_ReadOnly
+Group-to-Role Mapping	Done in application settings or token claims
+Access Control	Based on group membership
+Provisioning	Done by Super Users/Admins via group assignment
+
+Summary
+SSO provides a secure and seamless login experience.
+
+Security groups are attached/configured in the IdP to control who has access and what permissions they have in the IMPACT application.
+
+This approach ensures centralized access control, easy user management, and improved security compliance.
+
