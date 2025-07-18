@@ -1,0 +1,75 @@
+FR.02 > Fail
+Clarify the retention period value, as the evidence must show how it aligns with the Wells Fargo retention schedule policy.
+IMPACT: After our last call with Laurie, it was made clear that as long as Wells Fargo is a customer, Impact will not purge any Wells Fargo data. So in the latest version of the Data Purge Process Evidence document, we put the retention period to max integer value. Then, we put the purge log retention period (which is the period for which the data stays in the purge log before being deleted) to 1095 days (3 years). Based on our last call with Laurie, we believe this would satisfy the requirements of Wells Fargo.
+Right now, it looks like the ADM130 record is being retained for 1461 days (about 4 years).
+This value is what would be used in FR.03 evidence to calculate when a record is eligible for destruction.
+However, this is not within the allowed retention.
+For US-ADM130, the expectation is that after the active period ends, the record can only be retained for a maximum of 3 years from that date.
+IMPACT: Impact adjusted this within the Data Purge Process Evidence document (6.23.25 version) to 3 years based on the last conversation with Laurie.
+Also, clarify what is the email address to use for communicating retention period changes?
+IMPACT: roger@impact.com (CTO)
+Is there a specific point of contact on the vendor side for this?
+IMPACT: Roger Kjensrud, CTO
+Lastly, the embedded PDF does not include the vendor's confirmation that their retention parameters can be updated in production within 6 months of a request.
+IMPACT: Yes, the retention parameters can be updated within 6 months of request. This has been confirmed in emails and updates to the Data Purge Process Evidence document.
+Obtain this confirmation from the vendor and embed it in Deliverable 2. You can refer to the adjacent checklist for more details.
+FR.03 > Fail
+Clarify what value is being used to define how long ADM130 records should be retained.
+Wells Fargo expects that the evidence is clear and understandable to all audiences, proving how the system captures the end of the active period, how the retention period value (as shown in FR.02) is applied and that the record is retained for no more than 3 years after the active period closes.
+IMPACT: We believe the latest version of the Data Purge Process Evidence document spells out how this works in detail with examples. If there are still questions, we suggest another call.
+Refer to the FR.03 section of the job aid for examples of how destruction eligibility is calculated based on event date: 1).
+https://policy.wellsfargo.com/Search/DownloadDocument/21061#21061
+FR.04 > Fail
+Evidence mentions that the purge log retention is set to a default of 30 days.
+IMPACT: Yes, this is the default, but we configure this according to each clients' needs and requirements.
+Clarify is 30 days how long the destruction logs themselves will be retained?
+IMPACT: Yes, that is the default for how long the purge log is retained; but for Wells Fargo it is set to 3 years.
+In Deliverable 2, the ask is to show a annotated screenshot, the part of the code (like a delete statement) that destroys the destruction log once it reaches its retention period. Why?
+IMPACT: Please see snippet of the relevant code:
+FR.05 > Fail
+Like FR.04 Deliverable 3, the ask here is proof that the main data destruction (data evidenced in FR.03) runs daily—could be a screenshot of the scheduled job.
+IMPACT: Please note that this is the same screenshot provided above in FR.04.
+
+=====================
+
+The image contains a screenshot of a terminal output and a note related to a manual purge command executed on a system. Below is a breakdown of the content:
+
+Terminal Output
+The terminal shows the execution of a manual purge command on a system with the following details:
+
+Host: db-aa166.gcp.inf-impact.net
+OS and Kernel Version: CentOS 7.9.2009, kernel version 6.3.8
+IP Address: 10.54.16.186
+Serial Number: GoogleCloud-5EF35874E6253ED9492F449C5848EF4
+Memory Size: 251.88 GiB
+Swap Size: 16.00 GiB
+Processor: 32vitr/2phy AMD EPYC 7B12
+Company: IR
+Environment: production
+Is Virtual: true (gce)
+Location: physical:unknown
+Defined Puppet Tags:
+
+general
+class elastic_cloud impactbase impactbase::motd impactbase::params motd params settings
+[apps and dbs]
+ir_db_platform
+ir_db_platform::params
+
+GCP=>[IR] [PROD] [roger@db-aa166 ~]$ java -Xmx4g -jar ir_common.bizimpl.DatabasePurger programId=3d202 manual=true
+
+Note on Manual Purge Evidence
+The note provides context about the manual purge process:
+
+It references section 3.3 of the "Wells Fargo Application Minimum Standards - Evidence of Compliance - Guideline" (attached).
+It suggests that appending the existing "Data Purge Process Evidence for Wells Fargo" document with the manual purge evidence should be sufficient.
+Two key points are highlighted:
+The "Summary of configuration and process for Wells Fargo" section on page 4 outlines the manual process.
+The process is executed via a command, with a screenshot provided as evidence.
+
+java -Xmx4g -jar ir_common.bizimpl.DatabasePurger programId=3d202 manual=true
+java: Indicates the command is run using the Java runtime environment.
+-Xmx4g: Specifies the maximum heap size for the Java Virtual Machine (JVM) to 4 gigabytes, ensuring the program has sufficient memory to execute.
+-jar ir_common.bizimpl.DatabasePurger: Runs a Java archive (JAR) file named DatabasePurger, located in the ir_common.bizimpl package. This JAR file likely contains the logic to purge (delete or clean up) data from a database.
+programId=3d202: A parameter identifying the specific program or job (in this case, 3d202) that the purge operation is associated with.
+manual=true: Indicates that the purge is being performed manually, as opposed to an automated process.
